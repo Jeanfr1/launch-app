@@ -85,11 +85,11 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-sm shadow-xl shadow-black/5">
       <CardHeader>
-        <CardTitle className="text-xl">launchapp</CardTitle>
+        <CardTitle className="text-xl">Bem-vindo</CardTitle>
         <CardDescription>
-          Gestão de lançamentos digitais em tempo real.
+          Entre para gerenciar seus lançamentos em tempo real.
         </CardDescription>
       </CardHeader>
       <CardContent>

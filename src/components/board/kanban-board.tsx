@@ -62,16 +62,20 @@ function Coluna({
   const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
     <div className="flex w-72 shrink-0 flex-col">
-      <div className="mb-2 flex items-center gap-2 px-1">
+      <div className="mb-2 flex items-center gap-2 px-1.5">
         <span className={cn("size-2 rounded-full", STATUS_COR[status])} />
-        <span className="text-sm font-medium">{STATUS_LABEL[status]}</span>
-        <span className="ml-auto text-xs text-muted-foreground">{tarefas.length}</span>
+        <span className="text-sm font-semibold">{STATUS_LABEL[status]}</span>
+        <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
+          {tarefas.length}
+        </span>
       </div>
       <div
         ref={setNodeRef}
         className={cn(
-          "flex min-h-24 flex-1 flex-col gap-2 rounded-lg border border-dashed p-2 transition-colors",
-          isOver ? "border-primary/50 bg-muted/40" : "border-transparent bg-muted/20",
+          "flex min-h-24 flex-1 flex-col gap-2 rounded-xl border p-2 transition-colors",
+          isOver
+            ? "border-primary/50 bg-accent/50 ring-2 ring-primary/20"
+            : "border-border/60 bg-muted/30",
         )}
       >
         <SortableContext items={tarefas.map((t) => t.id)} strategy={verticalListSortingStrategy}>

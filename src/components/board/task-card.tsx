@@ -34,9 +34,9 @@ export function TaskCard({
   return (
     <div
       className={cn(
-        "rounded-lg border border-l-4 bg-card p-3 shadow-sm",
+        "cursor-grab rounded-lg border border-l-[3px] bg-card p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing",
         PRIORIDADE_COR[tarefa.prioridade],
-        arrastando && "opacity-80 ring-2 ring-primary/40",
+        arrastando && "rotate-1 opacity-90 shadow-lg ring-2 ring-primary/40",
       )}
     >
       <p className="text-sm font-medium leading-snug">{tarefa.titulo}</p>
