@@ -1,22 +1,11 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { STATUS_PROJETO_LABEL, formatarData } from "@/lib/constants";
+import type { MembroBoard } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { ProjetoTabs } from "@/components/board/projeto-tabs";
 
-const STATUS_LABEL: Record<string, string> = {
-  planejamento: "Planejamento",
-  em_andamento: "Em andamento",
-  concluido: "Concluído",
-  arquivado: "Arquivado",
-};
-
-function formatarData(iso: string) {
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
-}
-
-export default async function ProjetoPage({
-  params,
-}: PageProps<"/projetos/[id]">) {
+export default async function ProjetoPage({ params }: PageProps<"/projetos/[id]">) {
   const { id } = await params;
   const supabase = await createClient();
 
@@ -28,57 +17,53 @@ export default async function ProjetoPage({
 
   if (!projeto) notFound();
 
-  const { data: etapas } = await supabase
-    .from("stages")
-    .select("id, nome, ordem, data_inicio, data_fim")
-    .eq("project_id", id)
-    .order("ordem", { ascending: true });
+  const [{ data: etapas }, { data: tarefas }, { data: membrosRaw }] = await Promise.all([
+    supabase
+      .from("stages")
+      .select("id, nome, ordem, data_inicio, data_fim")
+      .eq("project_id", id)
+      .order("ordem", { ascending: true }),
+    supabase
+      .from("tasks")
+      .select(
+        "id, titulo, subetapa, canal, status, prioridade, stage_id, responsavel_id, data_calculada, visivel_cliente, ordem_kanban, story_points",
+      )
+      .eq("project_id", id)
+      .order("ordem_kanban", { ascending: true }),
+    supabase
+      .from("project_members")
+      .select("user_id, papel, profiles(full_name, avatar_url)")
+      .eq("project_id", id),
+  ]);
 
-  const lista = etapas ?? [];
+  const membros: MembroBoard[] = (membrosRaw ?? []).map((m) => ({
+    user_id: m.user_id,
+    papel: m.papel,
+    full_name: m.profiles?.full_name ?? null,
+    avatar_url: m.profiles?.avatar_url ?? null,
+  }));
 
   return (
     <>
-      <header className="flex h-14 items-center justify-between border-b px-6">
+      <header className="flex h-14 shrink-0 items-center justify-between border-b px-6">
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold">{projeto.nome}</h1>
           <Badge variant="secondary">
-            {STATUS_LABEL[projeto.status] ?? projeto.status}
+            {STATUS_PROJETO_LABEL[projeto.status] ?? projeto.status}
           </Badge>
         </div>
-        <span className="text-sm text-muted-foreground">
+        <span className="hidden text-sm text-muted-foreground sm:block">
           Vendas: {formatarData(projeto.data_inicio_vendas)} —{" "}
           {formatarData(projeto.data_fim_vendas)}
         </span>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-6">
-        <h2 className="mb-4 text-sm font-semibold uppercase text-muted-foreground">
-          Cronograma de etapas
-        </h2>
-        <ol className="relative border-l pl-6">
-          {lista.map((e) => {
-            const ehVendas = e.nome === "Vendas";
-            return (
-              <li key={e.id} className="mb-6 last:mb-0">
-                <span
-                  className={`absolute -left-[7px] mt-1.5 size-3 rounded-full ${
-                    ehVendas ? "bg-primary" : "bg-muted-foreground/40"
-                  }`}
-                />
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <span className="font-medium">
-                    {e.ordem}. {e.nome}
-                  </span>
-                  {ehVendas && <Badge>Semana âncora</Badge>}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {formatarData(e.data_inicio)} → {formatarData(e.data_fim)}
-                </p>
-              </li>
-            );
-          })}
-        </ol>
-      </main>
+      <ProjetoTabs
+        projectId={projeto.id}
+        tarefasIniciais={tarefas ?? []}
+        etapas={etapas ?? []}
+        membros={membros}
+      />
     </>
   );
 }
