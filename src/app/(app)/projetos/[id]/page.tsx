@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { STATUS_PROJETO_LABEL, formatarData } from "@/lib/constants";
 import type { MembroBoard } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { ProjetoTabs } from "@/components/board/projeto-tabs";
 
 export default async function ProjetoPage({ params }: PageProps<"/projetos/[id]">) {
   const { id } = await params;
-  const supabase = await createClient();
+  const { supabase } = await requireUser();
 
   const { data: projeto } = await supabase
     .from("projects")

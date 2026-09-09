@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import {
   computeStages,
@@ -38,7 +37,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
  * tarefas reais, com todas as datas calculadas pelo motor de datas.
  */
 export async function criarProjetoDoTemplate(input: unknown): Promise<ResultadoTemplate> {
-  const user = await requireUser();
+  const { user, supabase } = await requireUser();
   const parsed = schema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, erro: parsed.error.issues[0]?.message ?? "Dados inválidos." };
@@ -48,7 +47,6 @@ export async function criarProjetoDoTemplate(input: unknown): Promise<ResultadoT
     ? parsed.data.data_inicio_vendas
     : segundaDaSemana(parsed.data.data_inicio_vendas);
   const fim = fimDeVendas(inicio);
-  const supabase = await createClient();
 
   // 1) Projeto (o trigger adiciona o criador como owner).
   const { data: projeto, error: erroProjeto } = await supabase

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { RocketIcon, CalendarRangeIcon, CheckCircle2Icon } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { STATUS_PROJETO_LABEL, formatarData } from "@/lib/constants";
 import { NovoProjetoDialog } from "@/components/app/novo-projeto-dialog";
 import { Card } from "@/components/ui/card";
@@ -14,7 +14,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
+  const { supabase } = await requireUser();
   const { data: projetos } = await supabase
     .from("projects")
     .select("id, nome, status, data_inicio_vendas, data_fim_vendas")

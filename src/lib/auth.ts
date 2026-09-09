@@ -10,11 +10,19 @@ export async function getUser() {
   return user;
 }
 
-/** Exige usuário autenticado; redireciona para /login caso contrário. */
+/**
+ * Exige usuário autenticado e devolve TAMBÉM o client já autenticado.
+ * Importante: reutilize este `supabase` para as operações de banco — assim a
+ * sessão do usuário (JWT) fica anexada às requisições e o `auth.uid()` do RLS
+ * funciona. Criar um client novo sem chamar getUser roda como `anon`.
+ */
 export async function requireUser() {
-  const user = await getUser();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  return user;
+  return { user, supabase };
 }
 
 /** Perfil do usuário autenticado (tabela profiles). */

@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { STATUS_ORDEM, PRIORIDADE_ORDEM } from "@/lib/constants";
 import type { StatusTarefa, Prioridade } from "@/lib/constants";
@@ -36,13 +35,12 @@ const criarSchema = z.object({
 
 /** Cria uma tarefa e já calcula a data via motor de datas (âncora da etapa/vendas). */
 export async function criarTarefa(input: unknown): Promise<ResultadoTarefa> {
-  const user = await requireUser();
+  const { user, supabase } = await requireUser();
   const parsed = criarSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, erro: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
   const d = parsed.data;
-  const supabase = await createClient();
 
   // Monta o contexto de datas a partir do projeto, da etapa e dos marcos.
   const [{ data: projeto }, { data: etapa }, { data: marcos }] = await Promise.all([
@@ -113,11 +111,10 @@ const moverSchema = z.object({
 
 /** Move a tarefa no Kanban: novo status + posição (ordem_kanban fracionária). */
 export async function moverTarefa(input: unknown): Promise<ResultadoTarefa> {
-  const user = await requireUser();
+  const { user, supabase } = await requireUser();
   const parsed = moverSchema.safeParse(input);
   if (!parsed.success) return { ok: false, erro: "Movimento inválido." };
   const { taskId, project_id, status, ordem_kanban } = parsed.data;
-  const supabase = await createClient();
 
   const { data: antes } = await supabase
     .from("tasks")
@@ -163,13 +160,12 @@ const atualizarSchema = z.object({
 
 /** Edição inline de campos da tarefa. */
 export async function atualizarTarefa(input: unknown): Promise<ResultadoTarefa> {
-  await requireUser();
+  const { supabase } = await requireUser();
   const parsed = atualizarSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, erro: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
   const { taskId, project_id, patch } = parsed.data;
-  const supabase = await createClient();
   const { error } = await supabase
     .from("tasks")
     .update(patch as TaskUpdate)
@@ -185,11 +181,10 @@ const excluirSchema = z.object({
 });
 
 export async function excluirTarefa(input: unknown): Promise<ResultadoTarefa> {
-  const user = await requireUser();
+  const { user, supabase } = await requireUser();
   const parsed = excluirSchema.safeParse(input);
   if (!parsed.success) return { ok: false, erro: "Dados inválidos." };
   const { taskId, project_id } = parsed.data;
-  const supabase = await createClient();
   const { error } = await supabase.from("tasks").delete().eq("id", taskId);
   if (error) return { ok: false, erro: error.message };
   await supabase.from("activity_log").insert({

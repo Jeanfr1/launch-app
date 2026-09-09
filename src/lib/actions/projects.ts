@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import {
   computeStages,
@@ -28,7 +27,7 @@ export type ResultadoAcao =
  * começar numa segunda-feira.
  */
 export async function criarProjeto(input: unknown): Promise<ResultadoAcao> {
-  const user = await requireUser();
+  const { user, supabase } = await requireUser();
 
   const parsed = novoProjetoSchema.safeParse(input);
   if (!parsed.success) {
@@ -40,8 +39,6 @@ export async function criarProjeto(input: unknown): Promise<ResultadoAcao> {
     ? parsed.data.data_inicio_vendas
     : segundaDaSemana(parsed.data.data_inicio_vendas);
   const fim = fimDeVendas(inicio);
-
-  const supabase = await createClient();
 
   const { data: projeto, error: erroProjeto } = await supabase
     .from("projects")
