@@ -31,9 +31,11 @@ import { cn } from "@/lib/utils";
 function CartaoSortable({
   tarefa,
   membros,
+  onAbrir,
 }: {
   tarefa: TarefaBoard;
   membros: Map<string, MembroBoard>;
+  onAbrir: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: tarefa.id });
@@ -42,6 +44,7 @@ function CartaoSortable({
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn("touch-none", isDragging && "opacity-40")}
+      onClick={() => onAbrir(tarefa.id)}
       {...attributes}
       {...listeners}
     >
@@ -54,10 +57,12 @@ function Coluna({
   status,
   tarefas,
   membros,
+  onAbrir,
 }: {
   status: StatusTarefa;
   tarefas: TarefaBoard[];
   membros: Map<string, MembroBoard>;
+  onAbrir: (id: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
@@ -80,7 +85,7 @@ function Coluna({
       >
         <SortableContext items={tarefas.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tarefas.map((t) => (
-            <CartaoSortable key={t.id} tarefa={t} membros={membros} />
+            <CartaoSortable key={t.id} tarefa={t} membros={membros} onAbrir={onAbrir} />
           ))}
         </SortableContext>
       </div>
@@ -100,11 +105,13 @@ export function KanbanBoard({
   tarefas,
   setTarefas,
   membros,
+  onAbrir,
 }: {
   projectId: string;
   tarefas: TarefaBoard[];
   setTarefas: (updater: (prev: TarefaBoard[]) => TarefaBoard[]) => void;
   membros: Map<string, MembroBoard>;
+  onAbrir: (id: string) => void;
 }) {
   const router = useRouter();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -191,7 +198,7 @@ export function KanbanBoard({
     >
       <div className="flex gap-3 overflow-x-auto pb-4">
         {STATUS_ORDEM.map((s) => (
-          <Coluna key={s} status={s} tarefas={colunas[s]} membros={membros} />
+          <Coluna key={s} status={s} tarefas={colunas[s]} membros={membros} onAbrir={onAbrir} />
         ))}
       </div>
       <DragOverlay>

@@ -24,12 +24,14 @@ export function ListaTarefas({
   setTarefas,
   etapas,
   membros,
+  onAbrir,
 }: {
   projectId: string;
   tarefas: TarefaBoard[];
   setTarefas: (updater: (prev: TarefaBoard[]) => TarefaBoard[]) => void;
   etapas: EtapaBoard[];
   membros: Map<string, MembroBoard>;
+  onAbrir: (id: string) => void;
 }) {
   const router = useRouter();
   const etapaNome = new Map(etapas.map((e) => [e.id, e.nome]));
@@ -90,7 +92,13 @@ export function ListaTarefas({
             return (
               <tr key={t.id} className="border-b last:border-0 hover:bg-muted/20">
                 <td className="px-3 py-2">
-                  <p className="font-medium">{t.titulo}</p>
+                  <button
+                    type="button"
+                    onClick={() => onAbrir(t.id)}
+                    className="text-left font-medium hover:text-primary hover:underline"
+                  >
+                    {t.titulo}
+                  </button>
                   {(t.subetapa || t.canal) && (
                     <p className="text-xs text-muted-foreground">
                       {[t.subetapa, t.canal].filter(Boolean).join(" · ")}

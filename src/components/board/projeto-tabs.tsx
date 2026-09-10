@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { KanbanBoard } from "@/components/board/kanban-board";
 import { ListaTarefas } from "@/components/board/lista-tarefas";
 import { NovaTarefaDialog } from "@/components/board/nova-tarefa-dialog";
+import { TarefaDialog } from "@/components/board/tarefa-dialog";
 import { useRealtimeTarefas, usePresence } from "@/lib/realtime";
 
 function iniciais(nome: string) {
@@ -79,6 +80,8 @@ export function ProjetoTabs({
   useRealtimeTarefas(projectId, setTarefas);
   const online = usePresence(projectId, { id: meId, nome: meNome });
 
+  const [aberta, setAberta] = useState<string | null>(null);
+
   return (
     <Tabs defaultValue="kanban" className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between gap-2 px-6 py-3">
@@ -125,6 +128,7 @@ export function ProjetoTabs({
             tarefas={tarefas}
             setTarefas={setTarefas}
             membros={membrosMap}
+            onAbrir={setAberta}
           />
         </TabsContent>
 
@@ -135,6 +139,7 @@ export function ProjetoTabs({
             setTarefas={setTarefas}
             etapas={etapas}
             membros={membrosMap}
+            onAbrir={setAberta}
           />
         </TabsContent>
 
@@ -166,6 +171,16 @@ export function ProjetoTabs({
           </ol>
         </TabsContent>
       </div>
+
+      <TarefaDialog
+        key={aberta ?? "none"}
+        taskId={aberta}
+        projectId={projectId}
+        tarefa={tarefas.find((t) => t.id === aberta)}
+        membros={membros}
+        meId={meId}
+        onClose={() => setAberta(null)}
+      />
     </Tabs>
   );
 }

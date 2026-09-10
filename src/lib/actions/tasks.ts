@@ -152,6 +152,7 @@ const atualizarSchema = z.object({
       status: statusEnum.optional(),
       prioridade: prioridadeEnum.optional(),
       responsavel_id: z.string().uuid().nullable().optional(),
+      aprovador_id: z.string().uuid().nullable().optional(),
       visivel_cliente: z.boolean().optional(),
       story_points: z.number().int().min(0).max(100).nullable().optional(),
     })
