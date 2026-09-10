@@ -22,6 +22,11 @@ export async function requireUser() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const { error } = await supabase.rpc("claim_project_invitations");
+  // Older databases remain usable until the team migration is applied.
+  if (error && error.code !== "PGRST202") {
+    throw new Error("Não foi possível sincronizar os acessos da equipe. Tente novamente.");
+  }
   return { user, supabase };
 }
 

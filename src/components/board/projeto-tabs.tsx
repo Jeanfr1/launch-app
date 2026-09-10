@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { LayoutGridIcon, ListIcon, CalendarRangeIcon } from "lucide-react";
 import type { TarefaBoard, EtapaBoard, MembroBoard } from "@/lib/types";
 import { formatarData } from "@/lib/constants";
@@ -21,6 +22,14 @@ export function ProjetoTabs({
   etapas: EtapaBoard[];
   membros: MembroBoard[];
 }) {
+  const router = useRouter();
+  useEffect(() => {
+    const atualizar = () => { if (document.visibilityState === "visible") router.refresh(); };
+    const timer = window.setInterval(atualizar, 30_000);
+    window.addEventListener("focus", atualizar);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", atualizar); };
+  }, [router]);
+
   const [tarefas, setTarefas] = useState<TarefaBoard[]>(tarefasIniciais);
 
   // Reconcilia com o servidor quando os dados realmente mudam (ex.: após router.refresh()).
@@ -36,6 +45,11 @@ export function ProjetoTabs({
           t.visivel_cliente,
           t.data_calculada,
           t.titulo,
+          t.responsavel_id,
+          t.stage_id,
+          t.story_points,
+          t.subetapa,
+          t.canal,
         ]),
       ),
     [tarefasIniciais],

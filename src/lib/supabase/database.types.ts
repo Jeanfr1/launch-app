@@ -163,6 +163,38 @@ export type Database = {
         }
         Relationships: []
       }
+      project_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          papel: Database["public"]["Enums"]["papel_projeto"]
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          papel: Database["public"]["Enums"]["papel_projeto"]
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          papel?: Database["public"]["Enums"]["papel_projeto"]
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_invitations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_members: {
         Row: {
           created_at: string
@@ -787,13 +819,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_project_person: {
+        Args: {
+          p_email: string
+          p_project: string
+          p_role: Database["public"]["Enums"]["papel_projeto"]
+        }
+        Returns: string
+      }
       can_manage: { Args: { p_project: string }; Returns: boolean }
+      claim_project_invitations: { Args: never; Returns: undefined }
       is_client: { Args: { p_project: string }; Returns: boolean }
       is_member: { Args: { p_project: string }; Returns: boolean }
       is_team: { Args: { p_project: string }; Returns: boolean }
       member_role: {
         Args: { p_project: string }
         Returns: Database["public"]["Enums"]["papel_projeto"]
+      }
+      remove_project_person: {
+        Args: { p_invitation?: string; p_project: string; p_user?: string }
+        Returns: undefined
       }
       shares_project: { Args: { p_user: string }; Returns: boolean }
     }
@@ -1006,4 +1051,3 @@ export const Constants = {
     },
   },
 } as const
-

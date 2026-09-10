@@ -289,3 +289,27 @@ Decisões de projeto que moldam o launchapp:
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:14B8A6,100:6366F1&height=120&section=footer" width="100%" alt="" />
 
 </div>
+
+### Equipe por projeto
+
+O botão **Equipe** na página do projeto permite ao proprietário e aos gestores
+adicionar pessoas por e-mail, escolher a função, remover membros e cancelar
+acessos pendentes. Todas as funções de equipe podem atualizar tarefas; gestores
+podem também administrar a equipe. O proprietário não pode ser removido.
+
+Contas com e-mail confirmado recebem acesso imediatamente. Para pessoas ainda
+sem cadastro confirmado, o acesso fica pendente e é ativado no próximo acesso
+com o mesmo e-mail confirmado. O app não envia e-mail de convite: use **Copiar
+link do projeto** para compartilhar o endereço. O quadro busca atualizações a
+cada 30 segundos enquanto visível e ao retornar à janela.
+
+Para ativar em um banco existente, aplique somente a nova migração com uma
+credencial `SUPABASE_ACCESS_TOKEN` válida em `.env.local`:
+
+```sh
+npm run db:apply -- 20260910120000_project_team.sql
+npm run db:types
+```
+
+A migração de equipe deve ser aplicada uma única vez. Até sua aplicação, os
+projetos existentes continuam acessíveis e o diálogo informa a indisponibilidade.

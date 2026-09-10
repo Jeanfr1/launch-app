@@ -1,3 +1,4 @@
+import { EquipeDialog } from "@/components/board/equipe-dialog";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { STATUS_PROJETO_LABEL, formatarData } from "@/lib/constants";
@@ -7,7 +8,7 @@ import { ProjetoTabs } from "@/components/board/projeto-tabs";
 
 export default async function ProjetoPage({ params }: PageProps<"/projetos/[id]">) {
   const { id } = await params;
-  const { supabase } = await requireUser();
+  const { user, supabase } = await requireUser();
 
   const { data: projeto } = await supabase
     .from("projects")
@@ -17,7 +18,7 @@ export default async function ProjetoPage({ params }: PageProps<"/projetos/[id]"
 
   if (!projeto) notFound();
 
-  const [{ data: etapas }, { data: tarefas }, { data: membrosRaw }] = await Promise.all([
+  const [{ data: etapas }, { data: tarefas }, { data: membrosRaw, error: erroMembros }] = await Promise.all([
     supabase
       .from("stages")
       .select("id, nome, ordem, data_inicio, data_fim")
@@ -43,19 +44,28 @@ export default async function ProjetoPage({ params }: PageProps<"/projetos/[id]"
     avatar_url: m.profiles?.avatar_url ?? null,
   }));
 
+  const papelAtual = membros.find((m) => m.user_id === user.id)?.papel;
+  const podeGerenciar = papelAtual === "owner" || papelAtual === "gestor_projetos";
+  const { data: convites, error: erroConvites } = podeGerenciar
+    ? await supabase.from("project_invitations").select("id, email, papel").eq("project_id", id).order("created_at")
+    : { data: [], error: null };
+
   return (
     <>
-      <header className="flex h-14 shrink-0 items-center justify-between border-b px-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-lg font-semibold">{projeto.nome}</h1>
+      <header className="flex min-h-14 shrink-0 flex-wrap items-center justify-between gap-3 border-b px-6 py-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <h1 className="break-words text-lg font-semibold">{projeto.nome}</h1>
           <Badge variant="secondary">
             {STATUS_PROJETO_LABEL[projeto.status] ?? projeto.status}
           </Badge>
         </div>
+        <div className="flex items-center gap-3">
+        <EquipeDialog projectId={id} userId={user.id} membros={membros} convites={convites ?? []} podeGerenciar={podeGerenciar} erroCarregamento={Boolean(erroMembros || erroConvites)} />
         <span className="hidden text-sm text-muted-foreground sm:block">
           Vendas: {formatarData(projeto.data_inicio_vendas)} —{" "}
           {formatarData(projeto.data_fim_vendas)}
         </span>
+        </div>
       </header>
 
       <ProjetoTabs
