@@ -62,6 +62,29 @@ export type Database = {
           },
         ]
       }
+      invitation_attempts: {
+        Row: {
+          actor_id: string
+          created_at: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitation_attempts_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       launch_templates: {
         Row: {
           created_at: string
@@ -311,6 +334,48 @@ export type Database = {
           },
         ]
       }
+      sprint_events: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          remaining_delta: number
+          sprint_id: string
+          task_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          remaining_delta: number
+          sprint_id: string
+          task_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          remaining_delta?: number
+          sprint_id?: string
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sprint_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sprint_events_sprint_id_fkey"
+            columns: ["sprint_id"]
+            isOneToOne: false
+            referencedRelation: "sprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sprints: {
         Row: {
           created_at: string
@@ -436,6 +501,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "approval_task_scope"
+            columns: ["project_id", "task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["project_id", "id"]
+          },
+          {
             foreignKeyName: "task_approvals_aprovador_id_fkey"
             columns: ["aprovador_id"]
             isOneToOne: false
@@ -491,6 +563,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "attachment_task_scope"
+            columns: ["project_id", "task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["project_id", "id"]
+          },
+          {
             foreignKeyName: "task_attachments_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -543,6 +622,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "comment_task_scope"
+            columns: ["project_id", "task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["project_id", "id"]
+          },
+          {
             foreignKeyName: "task_comments_author_id_fkey"
             columns: ["author_id"]
             isOneToOne: false
@@ -565,6 +651,46 @@ export type Database = {
           },
         ]
       }
+      task_private: {
+        Row: {
+          observacoes: string | null
+          project_id: string
+          task_id: string
+        }
+        Insert: {
+          observacoes?: string | null
+          project_id: string
+          task_id: string
+        }
+        Update: {
+          observacoes?: string | null
+          project_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_task_scope"
+            columns: ["project_id", "task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["project_id", "id"]
+          },
+          {
+            foreignKeyName: "task_private_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_private_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: true
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           aprovador_id: string | null
@@ -578,12 +704,13 @@ export type Database = {
           descricao_operacional: string | null
           ferramenta: string | null
           id: string
-          observacoes: string | null
           ocorrencia_indice: number | null
           ordem_kanban: number
           prioridade: Database["public"]["Enums"]["prioridade"]
           project_id: string
           recorrencia: Database["public"]["Enums"]["recorrencia"]
+          recurrence_parent_id: string | null
+          recurrence_until: string | null
           regra_data: string
           responsavel_id: string | null
           sprint_id: string | null
@@ -608,12 +735,13 @@ export type Database = {
           descricao_operacional?: string | null
           ferramenta?: string | null
           id?: string
-          observacoes?: string | null
           ocorrencia_indice?: number | null
           ordem_kanban?: number
           prioridade?: Database["public"]["Enums"]["prioridade"]
           project_id: string
           recorrencia?: Database["public"]["Enums"]["recorrencia"]
+          recurrence_parent_id?: string | null
+          recurrence_until?: string | null
           regra_data?: string
           responsavel_id?: string | null
           sprint_id?: string | null
@@ -638,12 +766,13 @@ export type Database = {
           descricao_operacional?: string | null
           ferramenta?: string | null
           id?: string
-          observacoes?: string | null
           ocorrencia_indice?: number | null
           ordem_kanban?: number
           prioridade?: Database["public"]["Enums"]["prioridade"]
           project_id?: string
           recorrencia?: Database["public"]["Enums"]["recorrencia"]
+          recurrence_parent_id?: string | null
+          recurrence_until?: string | null
           regra_data?: string
           responsavel_id?: string | null
           sprint_id?: string | null
@@ -657,6 +786,34 @@ export type Database = {
           visivel_cliente?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "task_dependency_scope"
+            columns: ["project_id", "dependencia_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["project_id", "id"]
+          },
+          {
+            foreignKeyName: "task_parent_scope"
+            columns: ["project_id", "recurrence_parent_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["project_id", "id"]
+          },
+          {
+            foreignKeyName: "task_sprint_scope"
+            columns: ["project_id", "sprint_id"]
+            isOneToOne: false
+            referencedRelation: "sprints"
+            referencedColumns: ["project_id", "id"]
+          },
+          {
+            foreignKeyName: "task_stage_scope"
+            columns: ["project_id", "stage_id"]
+            isOneToOne: false
+            referencedRelation: "stages"
+            referencedColumns: ["project_id", "id"]
+          },
           {
             foreignKeyName: "tasks_aprovador_id_fkey"
             columns: ["aprovador_id"]
@@ -676,6 +833,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_recurrence_parent_id_fkey"
+            columns: ["recurrence_parent_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
           {
@@ -827,8 +991,17 @@ export type Database = {
         }
         Returns: string
       }
+      add_project_person_unlimited: {
+        Args: {
+          p_email: string
+          p_project: string
+          p_role: Database["public"]["Enums"]["papel_projeto"]
+        }
+        Returns: string
+      }
       can_manage: { Args: { p_project: string }; Returns: boolean }
       claim_project_invitations: { Args: never; Returns: undefined }
+      expand_task_series: { Args: { p_task: string }; Returns: number }
       is_client: { Args: { p_project: string }; Returns: boolean }
       is_member: { Args: { p_project: string }; Returns: boolean }
       is_team: { Args: { p_project: string }; Returns: boolean }

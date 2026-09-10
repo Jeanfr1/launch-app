@@ -124,7 +124,6 @@ export async function criarProjetoDoTemplate(input: unknown): Promise<ResultadoT
         status: "a_fazer",
         automacao: t.automacao,
         ferramenta: t.ferramenta,
-        observacoes: t.observacoes,
         visivel_cliente: false,
         ordem_kanban: t.ordem,
       });
