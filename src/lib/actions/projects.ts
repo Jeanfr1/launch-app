@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
@@ -40,19 +41,21 @@ export async function criarProjeto(input: unknown): Promise<ResultadoAcao> {
     : segundaDaSemana(parsed.data.data_inicio_vendas);
   const fim = fimDeVendas(inicio);
 
-  const { data: projeto, error: erroProjeto } = await supabase
+  // Não usar INSERT ... RETURNING: a policy de SELECT depende do vínculo
+  // de owner criado pelo trigger AFTER INSERT, ainda indisponível no RETURNING.
+  const projeto = { id: randomUUID() };
+  const { error: erroProjeto } = await supabase
     .from("projects")
     .insert({
+      id: projeto.id,
       nome,
       data_inicio_vendas: inicio,
       data_fim_vendas: fim,
       status: "planejamento",
       created_by: user.id,
-    })
-    .select("id")
-    .single();
+    });
 
-  if (erroProjeto || !projeto) {
+  if (erroProjeto) {
     return { ok: false, erro: erroProjeto?.message ?? "Falha ao criar projeto." };
   }
 

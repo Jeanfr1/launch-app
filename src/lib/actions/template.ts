@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
@@ -48,19 +49,20 @@ export async function criarProjetoDoTemplate(input: unknown): Promise<ResultadoT
     : segundaDaSemana(parsed.data.data_inicio_vendas);
   const fim = fimDeVendas(inicio);
 
-  // 1) Projeto (o trigger adiciona o criador como owner).
-  const { data: projeto, error: erroProjeto } = await supabase
+  // 1) Sem RETURNING: a leitura exige o vínculo de owner, que só fica
+  // disponível depois que o trigger AFTER INSERT termina.
+  const projeto = { id: randomUUID() };
+  const { error: erroProjeto } = await supabase
     .from("projects")
     .insert({
+      id: projeto.id,
       nome: parsed.data.nome,
       data_inicio_vendas: inicio,
       data_fim_vendas: fim,
       status: "planejamento",
       created_by: user.id,
-    })
-    .select("id")
-    .single();
-  if (erroProjeto || !projeto) {
+    });
+  if (erroProjeto) {
     return { ok: false, erro: erroProjeto?.message ?? "Falha ao criar projeto." };
   }
 
