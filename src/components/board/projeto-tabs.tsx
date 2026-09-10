@@ -7,27 +7,40 @@ import type { TarefaBoard, EtapaBoard, MembroBoard } from "@/lib/types";
 import { formatarData } from "@/lib/constants";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { KanbanBoard } from "@/components/board/kanban-board";
 import { ListaTarefas } from "@/components/board/lista-tarefas";
 import { NovaTarefaDialog } from "@/components/board/nova-tarefa-dialog";
+import { useRealtimeTarefas, usePresence } from "@/lib/realtime";
+
+function iniciais(nome: string) {
+  return nome.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
+}
 
 export function ProjetoTabs({
   projectId,
   tarefasIniciais,
   etapas,
   membros,
+  meId,
+  meNome,
 }: {
   projectId: string;
   tarefasIniciais: TarefaBoard[];
   etapas: EtapaBoard[];
   membros: MembroBoard[];
+  meId: string;
+  meNome: string;
 }) {
   const router = useRouter();
+  // Rede de segurança: ao voltar o foco, re-sincroniza (cobre eventos perdidos
+  // enquanto a aba esteve desconectada). O tempo real cobre o resto.
   useEffect(() => {
-    const atualizar = () => { if (document.visibilityState === "visible") router.refresh(); };
-    const timer = window.setInterval(atualizar, 30_000);
+    const atualizar = () => {
+      if (document.visibilityState === "visible") router.refresh();
+    };
     window.addEventListener("focus", atualizar);
-    return () => { window.clearInterval(timer); window.removeEventListener("focus", atualizar); };
+    return () => window.removeEventListener("focus", atualizar);
   }, [router]);
 
   const [tarefas, setTarefas] = useState<TarefaBoard[]>(tarefasIniciais);
@@ -62,6 +75,10 @@ export function ProjetoTabs({
 
   const membrosMap = useMemo(() => new Map(membros.map((m) => [m.user_id, m])), [membros]);
 
+  // Fase 5 — tempo real + presence.
+  useRealtimeTarefas(projectId, setTarefas);
+  const online = usePresence(projectId, { id: meId, nome: meNome });
+
   return (
     <Tabs defaultValue="kanban" className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between gap-2 px-6 py-3">
@@ -76,7 +93,29 @@ export function ProjetoTabs({
             <CalendarRangeIcon className="size-4" /> Cronograma
           </TabsTrigger>
         </TabsList>
-        <NovaTarefaDialog projectId={projectId} etapas={etapas} />
+        <div className="flex items-center gap-3">
+          {online.length > 0 && (
+            <div className="flex items-center">
+              <div className="flex -space-x-2">
+                {online.slice(0, 5).map((u) => (
+                  <Avatar
+                    key={u.id}
+                    className="size-7 ring-2 ring-background"
+                    title={`${u.nome}${u.id === meId ? " (você)" : ""} · online`}
+                  >
+                    <AvatarFallback className="brand-gradient text-[10px] font-semibold text-white">
+                      {iniciais(u.nome)}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+              {online.length > 5 && (
+                <span className="ml-1 text-xs text-muted-foreground">+{online.length - 5}</span>
+              )}
+            </div>
+          )}
+          <NovaTarefaDialog projectId={projectId} etapas={etapas} />
+        </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto px-6 pb-6">

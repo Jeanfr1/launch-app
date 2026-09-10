@@ -73,6 +73,8 @@ export default async function ProjetoPage({ params }: PageProps<"/projetos/[id]"
         tarefasIniciais={tarefas ?? []}
         etapas={etapas ?? []}
         membros={membros}
+        meId={user.id}
+        meNome={membros.find((m) => m.user_id === user.id)?.full_name ?? "Você"}
       />
     </>
   );
